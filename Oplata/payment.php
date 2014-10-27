@@ -112,7 +112,7 @@ function pay_go()
         'amount' => round($_SESSION['order_info']['totalsum'] * 100),
         'currency' => 'UAH',
         'server_callback_url' => $returnUrl,
-        'response_url' => $returnUrl,
+        'response_url' => $returnUrl . '&send_email=1',
         'lang' => 'RU',
         'sender_email' => $_SESSION['client']['email'],
         'delayed' => 'N');
@@ -167,7 +167,7 @@ function pay_get()
     }
 
     $paymentInfo = $oplata->isPaymentValid($settings, $_REQUEST);
-    if ($paymentInfo === true) {
+    if ($paymentInfo === true && isset($_REQUEST['send_email']) && !empty($_REQUEST['send_email'])) {
         $content = sendEmailToAdmin($order);
 
         return $content;
@@ -183,8 +183,9 @@ function sendEmailToAdmin($order)
     // Send e-mail for admin
     $tplm = new FastTemplate('./pay_mod/Oplata');
     $tplm->DefineTemplate(array('mail_message' => 'pay_try_mail.htm'));
-    $tplm->Assign(array('{ORDER_CODE}' => htmlspecialchars($order['code']),
-        '{SUMA}' => number_format($order['payment_cost'], 2, ',', "'"),
+    $tplm->Assign(array(
+        'ORDER_CODE' => htmlspecialchars($order['code']),
+        'SUMA' => number_format($order['payment_cost'], 2, ',', "'"),
         'CURR' => htmlspecialchars($order['payment_curr']),
         'SHOPNAMES' => htmlspecialchars($gOptions['attr_shop_name']),
         'SHOPURL' => htmlspecialchars($gOptions['attr_shop_url'])
